@@ -311,27 +311,30 @@ F
       non_matching_ivars.empty?
     end
 
+    def maybe_emit_cloned_resource_warning(prior_resource)
+      unless identical_resource?(prior_resource)
+        Chef::Log.warn("Cloning resource attributes for #{self} from prior resource (CHEF-3694)")
+        Chef::Log.warn("Previous #{prior_resource}: #{prior_resource.source_line}") if prior_resource.source_line
+        Chef::Log.warn("Current  #{self}: #{self.source_line}") if self.source_line
+      else
+        Chef::Log.debug("Harmless resource cloning from #{prior_resource}: #{prior_resource.source_line} to #{self}: #{self.source_line}")
+      end
+    end
+
     def load_prior_resource(resource_type, instance_name)
       begin
         key = ::Chef::ResourceCollection::ResourceSet.create_key(resource_type, instance_name)
         prior_resource = run_context.resource_collection.lookup(key)
         # if we get here, there is a prior resource (otherwise we'd have jumped
         # to the rescue clause).
-        unless identical_resource?(prior_resource)
-          Chef::Log.warn("Cloning resource attributes for #{key} from prior resource (CHEF-3694)")
-          Chef::Log.warn("Previous #{prior_resource}: #{prior_resource.source_line}") if prior_resource.source_line
-          Chef::Log.warn("Current  #{self}: #{self.source_line}") if self.source_line
-        else
-          Chef::Log.debug("Harmless resource cloning from #{prior_resource}: #{prior_resource.source_line} to #{self}: #{self.source_line}")
-        end
         prior_resource.instance_variables.each do |iv|
           unless iv == :@source_line || iv == :@action || iv == :@not_if || iv == :@only_if
             self.instance_variable_set(iv, prior_resource.instance_variable_get(iv))
           end
         end
-        true
+        prior_resource
       rescue Chef::Exceptions::ResourceNotFound
-        true
+        nil
       end
     end
 

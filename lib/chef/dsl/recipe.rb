@@ -105,7 +105,7 @@ class Chef
         # This behavior is very counter-intuitive and should be removed.
         # See CHEF-3694, https://tickets.opscode.com/browse/CHEF-3694
         # Moved to this location to resolve CHEF-5052, https://tickets.opscode.com/browse/CHEF-5052
-        resource.load_prior_resource(type, name)
+        prior_resource = resource.load_prior_resource(type, name)
         resource.cookbook_name = cookbook_name
         resource.recipe_name = recipe_name
         # Determine whether this resource is being created in the context of an enclosing Provider
@@ -117,6 +117,9 @@ class Chef
 
         # Evaluate resource attribute DSL
         resource.instance_eval(&resource_attrs_block) if block_given?
+
+        # emit a cloned resource warning if it is warranted
+        resource.maybe_emit_cloned_resource_warning(prior_resource) unless prior_resource.nil?
 
         # Run optional resource hook
         resource.after_created
