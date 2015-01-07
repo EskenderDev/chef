@@ -160,7 +160,52 @@ describe Chef::Recipe do
         zm_resource # force let binding evaluation
         expect { run_context.resource_collection.resources(:zen_master => "klopp") }.to raise_error(Chef::Exceptions::ResourceNotFound)
       end
+    end
 
+    describe "when cloning resources" do
+      it "should emit a 3694 warning when attributes change" do
+        recipe.zen_master "klopp" do
+          something "bvb"
+        end
+        expect(Chef::Log).to receive(:warn).at_least(:once)
+        recipe.zen_master "klopp" do
+          something "vbv"
+        end
+      end
+
+      it "should not emit a 3694 warning when attributes do not change" do
+        recipe.zen_master "klopp" do
+          something "bvb"
+        end
+        expect(Chef::Log).to_not receive(:warn)
+        recipe.zen_master "klopp" do
+          something "bvb"
+        end
+      end
+
+      it "should not emit a 3694 warning when attributes do not change and the first action is :nothing" do
+        recipe.zen_master "klopp" do
+          something "bvb"
+          action :nothing
+        end
+        expect(Chef::Log).to_not receive(:warn)
+        recipe.zen_master "klopp" do
+          something "bvb"
+          action :score
+        end
+      end
+
+      it "should not emit a 3694 warning when attributes do not change and the second action is :nothing" do
+        recipe.zen_master "klopp" do
+          something "bvb"
+          action :score
+        end
+        expect(Chef::Log).to_not receive(:warn)
+        recipe.zen_master "klopp" do
+          something "bvb"
+          action :nothing
+        end
+      end
     end
 
     describe "creating resources via declare_resource" do
