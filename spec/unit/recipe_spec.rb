@@ -173,6 +173,28 @@ describe Chef::Recipe do
         end
       end
 
+      it "should emit a 3694 warning when attributes change" do
+        recipe.zen_master "klopp" do
+          something "bvb"
+        end
+        expect(Chef::Log).to receive(:warn).at_least(:once)
+        recipe.zen_master "klopp" do
+          something "bvb"
+          peace true
+        end
+      end
+
+      it "should emit a 3694 warning when attributes change" do
+        recipe.zen_master "klopp" do
+          something "bvb"
+          peace true
+        end
+        expect(Chef::Log).to receive(:warn).at_least(:once)
+        recipe.zen_master "klopp" do
+          something "bvb"
+        end
+      end
+
       it "should not emit a 3694 warning when attributes do not change" do
         recipe.zen_master "klopp" do
           something "bvb"

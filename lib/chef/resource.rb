@@ -299,11 +299,15 @@ F
     def identical_resource?(prior_resource)
       skipped_ivars = [ :@source_line, :@cookbook_name, :@recipe_name, :@params, :@elapsed_time ]
       checked_ivars = prior_resource.instance_variables - skipped_ivars
+      pp prior_resource.instance_variables
       non_matching_ivars = checked_ivars.reject do |iv|
         if iv == :@action && ( [self.instance_variable_get(iv)].flatten == [:nothing] || [prior_resource.instance_variable_get(iv)].flatten == [:nothing] )
           # :nothing action on either side of the comparison always matches
           true
         else
+          puts iv
+          puts self.instance_variable_get(iv)
+          puts prior_resource.instance_variable_get(iv)
           self.instance_variable_get(iv) == prior_resource.instance_variable_get(iv)
         end
       end
