@@ -298,7 +298,7 @@ F
 
     def identicalish_resource?(cloned_resource)
       skipped_ivars = [ :@source_line, :@cookbook_name, :@recipe_name, :@params, :@elapsed_time ]
-      checked_ivars = cloned_resource.instance_variables | self.instance_variables - skipped_ivars
+      checked_ivars = ( cloned_resource.instance_variables | self.instance_variables ) - skipped_ivars
       non_matching_ivars = checked_ivars.reject do |iv|
         if iv == :@action && ( [self.instance_variable_get(iv)].flatten == [:nothing] || [cloned_resource.instance_variable_get(iv)].flatten == [:nothing] )
           # :nothing action on either side of the comparison always matches
@@ -311,14 +311,14 @@ F
       non_matching_ivars.empty?
     end
 
-    def maybe_emit_cloned_resource_warning(cloned_resource)
-      unless identicalish_resource?(cloned_resource)
+    def emit_cloned_resource_warning(cloned_resource)
+      #unless identicalish_resource?(cloned_resource)
         Chef::Log.warn("Cloning resource attributes for #{self} from prior resource (CHEF-3694)")
         Chef::Log.warn("Previous #{cloned_resource}: #{cloned_resource.source_line}") if cloned_resource.source_line
         Chef::Log.warn("Current  #{self}: #{self.source_line}") if self.source_line
-      else
-        Chef::Log.debug("Harmless resource cloning from #{cloned_resource}: #{cloned_resource.source_line} to #{self}: #{self.source_line}")
-      end
+      #else
+      #  Chef::Log.debug("Harmless resource cloning from #{cloned_resource}: #{cloned_resource.source_line} to #{self}: #{self.source_line}")
+      #end
     end
 
     def load_prior_resource(resource_type, instance_name)
@@ -327,12 +327,13 @@ F
         prior_resource = run_context.resource_collection.lookup(key)
         # if we get here, there is a prior resource (otherwise we'd have jumped
         # to the rescue clause).
+        ret = identicalish_resource?(prior_resource)
         prior_resource.instance_variables.each do |iv|
           unless iv == :@source_line || iv == :@action || iv == :@not_if || iv == :@only_if
             self.instance_variable_set(iv, prior_resource.instance_variable_get(iv))
           end
         end
-        prior_resource
+        ret
       rescue Chef::Exceptions::ResourceNotFound
         nil
       end

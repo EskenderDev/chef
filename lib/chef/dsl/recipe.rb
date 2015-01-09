@@ -105,7 +105,7 @@ class Chef
         # This behavior is very counter-intuitive and should be removed.
         # See CHEF-3694, https://tickets.opscode.com/browse/CHEF-3694
         # Moved to this location to resolve CHEF-5052, https://tickets.opscode.com/browse/CHEF-5052
-        prior_resource = resource.load_prior_resource(type, name)
+        trivial_prior_resource = resource.load_prior_resource(type, name)
         cloned_resource = resource.dup
         resource.cookbook_name = cookbook_name
         resource.recipe_name = recipe_name
@@ -120,7 +120,9 @@ class Chef
         resource.instance_eval(&resource_attrs_block) if block_given?
 
         # emit a cloned resource warning if it is warranted
-        resource.maybe_emit_cloned_resource_warning(cloned_resource) unless prior_resource.nil?
+        if !trivial_prior_resource.nil? && ( !trivial_prior_resource || !resource.identicalish_resource?(cloned_resource))
+          resource.emit_cloned_resource_warning(cloned_resource)
+        end
 
         # Run optional resource hook
         resource.after_created

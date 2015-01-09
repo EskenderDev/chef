@@ -195,36 +195,38 @@ describe Chef::Recipe do
         end
       end
 
-      it "should not emit a 3694 warning when attributes do not change" do
+      it "should emit a 3694 warning for non-trivial attributes (unfortunately)" do
         recipe.zen_master "klopp" do
           something "bvb"
         end
-        expect(Chef::Log).to_not receive(:warn)
+        expect(Chef::Log).to receive(:warn).at_least(:once)
         recipe.zen_master "klopp" do
           something "bvb"
         end
       end
 
+      it "should not emit a 3694 warning for completely trivial resource cloning" do
+        recipe.zen_master "klopp"
+        expect(Chef::Log).to_not receive(:warn)
+        recipe.zen_master "klopp"
+      end
+
       it "should not emit a 3694 warning when attributes do not change and the first action is :nothing" do
         recipe.zen_master "klopp" do
-          something "bvb"
           action :nothing
         end
         expect(Chef::Log).to_not receive(:warn)
         recipe.zen_master "klopp" do
-          something "bvb"
           action :score
         end
       end
 
       it "should not emit a 3694 warning when attributes do not change and the second action is :nothing" do
         recipe.zen_master "klopp" do
-          something "bvb"
           action :score
         end
         expect(Chef::Log).to_not receive(:warn)
         recipe.zen_master "klopp" do
-          something "bvb"
           action :nothing
         end
       end
